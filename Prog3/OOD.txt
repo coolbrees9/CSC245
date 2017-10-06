@@ -1,0 +1,7 @@
+The compression algorithm used is the huffman encoding. 
+
+This compression builds a huffman tree and based on that tree, it will make an encoding table with every character listed, their frequency, parent, and their child type.
+
+The ASCII code will be printed along with a binary code for each. Below that will be the binary code of the file based on the ASCII.
+
+You will then be able to unzip the file and restore everything previous to the zip.

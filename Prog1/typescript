@@ -1,0 +1,294 @@
+Script started on Thu 09 Feb 2017 09:10:31 PM EST
+]0;oneal_c@cobra:~/CSC245/Prog1[?1034hCobra> cat editor.cpp
+//Colin O'Neal
+//Project 1
+
+#include<iostream>
+#include"linelist.h"
+#include<string>
+#include <cctype>
+#include <fstream>
+#include <cstdlib>
+using namespace std;
+
+void OpenFile(ifstream& infile, int argc, char *argv[]);
+void makeList(ifstream& infile, LineList& l);
+void Save(char *argv[], LineList& l);
+int main(int argc, char* argv[])
+{
+	LineList l;
+	ifstream infile;
+        OpenFile(infile, argc, argv);
+	makeList(infile, l);
+	l.printList();
+	cout << l.getCurrLineNum() << "> ";
+	char cmd;
+	int lineNum;
+	string newLine;
+		while(cmd != 'E')
+		{
+			cin >> cmd;
+			switch(cmd)
+			{
+				case 'I':
+				lineNum = l.getCurrLineNum()+1;
+
+   				if (l.getCurrLineNum() > l.getLength())
+       					lineNum--;
+
+   				cout << lineNum << "> ";
+   				getline (cin, newLine);
+   				l.insertLine(newLine);
+				break;
+
+				case 'D':
+				l.deleteLine();
+				cout << l.getCurrLineNum() << "> ";
+				break;
+
+				case 'L':
+				l.printList();
+				cout << l.getCurrLineNum() << "> ";
+				break;
+
+				case 'P':
+				l.movePrevLine();
+				break;
+
+				case 'N':
+				l.moveNextLine();
+				cout << l.getCurrLineNum() << "> ";
+				break;
+				
+				case 'E':
+				Save(argv, l);
+				break;
+
+				default:
+					cout << "Command not found, please try again." << endl;
+					cout << l.getCurrLineNum() << "> ";
+			}
+		}
+	return 0;
+}
+//Opens the file entered after the a.out
+void OpenFile (ifstream& infile, int argc, char *argv[])
+{
+        if (argc == 1)
+        {
+                cout << "Error!! No File Entered." << endl;
+                exit(1);
+        }
+        string filename = argv[1];
+        infile.open(filename.c_str());
+}
+//Makes a list from the testfile
+void makeList(ifstream& infile, LineList& l)
+{
+	string line;
+	while(getline(infile, line))
+		l.insertLine(line);
+	infile.close();
+}
+//Saves the program's list
+void Save(char *argv[], LineList& l)
+{
+	ofstream outfile;
+	string filename = argv[1];
+	outfile.open(filename.c_str());
+	l.goToTop();
+	for(int i = 0; i < l.getLength(); i++)
+	{
+		outfile << l.getCurrLine() << endl;
+		l.moveNextLine();
+	}
+	outfile.close();	
+}
+]0;oneal_c@cobra:~/CSC245/Prog1Cobra> cat linelist.cpp
+#include<iostream>
+#include "linelist.h"
+using namespace std;
+LineList::LineList()
+{
+	LineNode *line = new LineNode;
+	LineNode *line2 = new LineNode;
+
+	line -> info = topMessage;
+	currLine = line;
+	currLineNum = 0;
+	length = 0;
+	line2 -> info = bottomMessage;
+	currLine -> back = NULL;
+	currLine -> next = line2;
+	line2 -> back = line;
+	line2 -> next = NULL;
+}
+//Takes the current line to the top
+void LineList::goToTop() 
+{
+	// Post : Advances currLine to line 1
+	while(currLine -> info != topMessage)
+		currLine = currLine -> back;
+	currLine = currLine -> next;
+	currLineNum = 1;
+}
+//Takes the current line to the bottom
+void LineList::goToBottom() 
+{
+	// Post : Advances currLine to last line
+	while(currLine -> info != bottomMessage)
+		currLine = currLine -> next;
+	currLine = currLine -> back;
+	currLineNum = length;
+}
+//Inserts a new line after the current line
+void LineList::insertLine(string newLine)
+{
+	// post : newLine has been inserted after the current line
+	if(currLine -> info == bottomMessage)
+	{
+		currLine = currLine -> back;
+		currLineNum--;
+	}
+	LineNode *insert = new LineNode;
+	insert -> info = newLine;
+	insert -> back = currLine;
+	currLine -> next -> back = insert;
+	insert -> next = currLine -> next;
+	currLine -> next = insert;
+	currLine = insert;
+	length++;
+	currLineNum++;
+}
+//Deletes the current line 
+void LineList::deleteLine()
+{
+	// post : deletes the current line leaving currentLine
+	//	  pointing to line following
+	if((currLine -> info != topMessage) && (currLine -> info != bottomMessage))
+	{
+		LineNode *dlt = new LineNode;
+		currLine -> back -> next = currLine -> next;
+		currLine -> next -> back = currLine -> back;
+		dlt = currLine;
+		if(currLine -> next -> info != bottomMessage)
+		{
+			currLine = currLine -> next;
+			currLineNum++;
+		}
+		else
+		{
+			currLine = currLine -> back;
+			currLineNum--;
+		}
+
+		delete dlt;
+		length--;
+	}
+}
+//Prints the whole list
+void LineList::printList() 
+{
+	int lineNum = 1;
+	LineNode *Mark = currLine;
+	int markNum = currLineNum;
+	goToTop();
+	LineNode *curr = currLine;
+	while(curr -> info != bottomMessage)
+	{
+		cout << lineNum << "> " << curr -> info << endl;
+		curr = curr -> next;
+		lineNum++;
+	}
+	currLine = Mark;
+	currLineNum = markNum;
+}
+//Returns the current line user is on
+string LineList::getCurrLine() const
+{
+	
+	return currLine -> info;
+}
+//Changes the current line to the next line
+void LineList::moveNextLine()
+{
+	// Post : Advances currLine (unless already at last line)
+	if((currLine -> info != bottomMessage) && (currLine -> next != NULL))
+	{
+		currLine = currLine -> next;
+		currLineNum++;
+	}
+}
+//Changes the current line to the previous line
+void LineList::movePrevLine()
+{
+	// Post : Advances currLine (unless already at last line)
+	if((currLine -> back != NULL) && (currLine -> info != topMessage))
+	{
+		currLine = currLine -> back;
+		currLineNum--;
+	}
+	cout << currLineNum << "> ";
+}
+//Returns the current Line number the user is on
+int LineList::getCurrLineNum() const
+{
+	return currLineNum;
+}
+//Returns the current length of the list
+int LineList::getLength() const
+{
+	return length;
+}
+]0;oneal_c@cobra:~/CSC245/Prog1Cobra> C++[K[K[Kc++ editor.cpp linelist.0[Ko
+]0;oneal_c@cobra:~/CSC245/Prog1Cobra> EDIT testfile
+1> This is my first line.
+2> This is my second line.
+3> This is my third line.
+3> N
+4> N
+4> P
+3> P
+2> P
+1> L
+1> This is my first line.
+2> This is my second line.
+3> This is my third line.
+1> N
+2> N
+3> N
+4> ISaints
+4> L
+4> L
+1> This is my first line.
+2> This is my second line.
+3> This is my third line.
+4> L
+4> L
+1> This is my first line.
+2> This is my second line.
+3> This is my third line.
+4> L
+4> D
+3> N
+4> I Saints
+4> L
+4> L
+1> This is my first line.
+2> This is my second line.
+3> This is my third line.
+4> L
+4> D
+3> N
+4> I
+4> Saints
+4> L
+1> This is my first line.
+2> This is my second line.
+3> This is my third line.
+4> Saints
+4> E
+]0;oneal_c@cobra:~/CSC245/Prog1Cobra> exit
+exit
+
+Script done on Thu 09 Feb 2017 09:13:32 PM EST

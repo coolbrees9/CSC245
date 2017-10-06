@@ -1,0 +1,262 @@
+Script started on Fri 24 Feb 2017 03:23:09 PM EST
+]0;oneal_c@cobra:~/CSC245/Prog2[?1034hCobra> cat -n dc.cpp
+     1	//Colin O'Neal
+     2	//Project 2
+     3	#include <stdlib.h>
+     4	#include <stdio.h>
+     5	#include <iostream>
+     6	#include"stack.h"
+     7	#include<string>
+     8	#include <cctype>
+     9	#include <fstream>
+    10	#include <cstdlib>
+    11	using namespace std;
+    12	
+    13	void printStack(const Stack<int> &s);
+    14	bool stringIsDigit(string cmd);
+    15	int size(const Stack<int> &s);
+    16	void program(Stack<int> &t, string cmd);
+    17	void takeInput(Stack<int> &t, string cmd);
+    18	
+    19	int main(int argc, char* argv[])
+    20	{
+    21		Stack<int> t;
+    22		string cmd;
+    23		cout << "Starting Postfix Calculator..." << endl;
+    24		//cin >> cmd;
+    25		while(getline(cin, cmd))
+    26		{
+    27			takeInput(t, cmd);
+    28		}
+    29		return 0;
+    30	}
+    31	
+    32	//Method takes your input and determines how to handle it
+    33	void takeInput(Stack<int> &t, string cmd)
+    34	{
+    35		int i;
+    36		int temp;
+    37		try
+    38		{
+    39			for( i = 0; i < cmd.length(); i++)
+    40			{
+    41				if(isspace(cmd[i]))
+    42				{}
+    43				else if(cmd[i] == '_' && isdigit(cmd[i+1]))
+    44				{
+    45					temp = cmd[i+1] - '0';
+    46					temp *= -1;
+    47					t.push(temp);
+    48				}
+    49				else if(cmd[i-1] != '_' && isdigit(cmd[i]))
+    50				{
+    51					temp = cmd[i] - '0';
+    52					int count = 1;
+    53					while(isdigit(cmd[i + count]))
+    54					{
+    55						temp = temp *10 + cmd[i + count] - '0';
+    56						count++;
+    57					}
+    58					i = i + count - 1;
+    59					t.push(temp);
+    60				}
+    61				else
+    62				{
+    63	    				int x, y;
+    64	    					if(cmd[i] == 'p')
+    65						{
+    66	    					if(!t.isEmpty())
+    67	    					{
+    68	    						cout << t.top();
+    69	    						cout << endl;
+    70	    					}
+    71	    					}
+    72	    		
+    73	    					else if(cmd[i] == 'n')
+    74						{
+    75	    					if(!t.isEmpty())
+    76	    					{
+    77	    						cout << t.top();
+    78	    						t.pop();
+    79	    					}
+    80	    					}
+    81	    
+    82	    					else if(cmd[i] == 'f')
+    83						{
+    84	    					if(!t.isEmpty())
+    85	    					{
+    86	    					printStack(t);
+    87	    					}
+    88	    					}
+    89	    
+    90	    					else if(cmd[i] == 'c')
+    91						{
+    92	    					if(!t.isEmpty())
+    93	    						t.makeEmpty();
+    94	    					}
+    95	    
+    96	    					else if(cmd[i] == 'd')
+    97						{
+    98	    					if(!t.isEmpty())
+    99	    						t.push(t.top());
+   100	    					}
+   101	    
+   102	    					else if(cmd[i] == 'r')
+   103						{
+   104	    					if(!t.isEmpty())
+   105	    					{
+   106	    						x = t.topAndPop();
+   107	            					y = t.topAndPop();
+   108	            					t.push(x);
+   109	            					t.push(y);
+   110	    					}
+   111	    					}
+   112	    
+   113	    					else if(cmd[i] == '+')
+   114						{
+   115	    					if(!t.isEmpty() && size(t) > 1)
+   116	                    			{
+   117	                            			x = t.topAndPop();
+   118	                            			y = t.topAndPop();
+   119	                            			t.push(x + y);
+   120	                    			}
+   121	                    			else
+   122	                            			cout << "Not enough integers" << endl;
+   123	                    			}
+   124	    
+   125	    					else if(cmd[i] == '-')
+   126						{
+   127	    					if(!t.isEmpty() && size(t) > 1)
+   128	                    			{
+   129	                            			x = t.topAndPop();
+   130	                            			y = t.topAndPop();
+   131	                            			t.push(y - x);
+   132	                    			}
+   133	                    			else
+   134	                            			cout << "Not enough integers" << endl;
+   135	                    			}
+   136	    
+   137	    					else if(cmd[i] == '*')
+   138						{
+   139	    					if(!t.isEmpty() && size(t) > 1)
+   140	    					{
+   141	                            			x = t.topAndPop();
+   142	                            			y = t.topAndPop();
+   143	                            			t.push(x * y);
+   144	                    			}
+   145	                    			else
+   146	                            			cout << "Not enough integers" << endl;
+   147	                    			}
+   148	    
+   149	    					else if(cmd[i] == '/')
+   150						{
+   151	    					if(!t.isEmpty() && size(t) > 1)
+   152	    					{
+   153	    						x = t.topAndPop();
+   154	                    				y = t.topAndPop();
+   155	    						if(temp == 0)
+   156	    							throw DivisionByZero();
+   157	    						else
+   158	                    					t.push(y / x);
+   159	    					}
+   160	    					else
+   161	    						cout << "Not enough integers" << endl;
+   162	    					}
+   163	    
+   164	    					else if(cmd[i] == '%')
+   165						{
+   166	    					if(!t.isEmpty() && size(t) > 1)
+   167	    					{
+   168	    						x = t.topAndPop();
+   169	                   	 			y = t.topAndPop();
+   170	                    				t.push(y % x);
+   171	    					}
+   172	    					else
+   173	    						cout << "Not enough integers" << endl;
+   174	    					}
+   175						else if(cmd[i-1] == '_')
+   176						{}
+   177	    
+   178	    					else
+   179	    						cout << "Not a valid command, try again." << endl;	
+   180				}
+   181			}
+   182		}
+   183	    	catch(DivisionByZero exc)
+   184	    	{
+   185	    		cout << "Division by zero not allowed, try again" << endl;
+   186	    	}
+   187	    	catch(Underflow obj)
+   188	    	{
+   189	    		cout << "Can't pop an empty string" << endl;
+   190	    	}
+   191	    	catch(Overflow obj)
+   192	    	{
+   193	    		cout << "Stack is Full" << endl;
+   194	    	}
+   195	 }
+   196	//Prints the full Stack 
+   197	void printStack(const Stack<int> &s)
+   198	{
+   199		Stack<int> temp = s;
+   200		while(!temp.isEmpty())
+   201			cout << temp.topAndPop() << endl;
+   202	}
+   203	//checks to see if input is an integer and returns true if it is
+   204	bool stringIsDigit(string cmd)
+   205	{
+   206		for(int i = 0; i < cmd.length(); i++)
+   207		{
+   208			if(!isdigit(cmd[i]))
+   209				return false;
+   210		}
+   211		return true;
+   212	}
+   213	//Calculates the size of the stack	
+   214	int size(const Stack<int> &s)
+   215	{
+   216		int count = 0;
+   217		Stack<int> temp = s;
+   218		while(!temp.isEmpty())
+   219		{
+   220			count++;
+   221			temp.pop();
+   222		}
+   223		return count;
+   224	}	
+]0;oneal_c@cobra:~/CSC245/Prog2Cobra> c++ dc.cpp
+]0;oneal_c@cobra:~/CSC245/Prog2Cobra> a.out
+Starting Postfix Calculator...
+2 3 +
+p
+5
+6 - p
+-1
+4 6 * + p
+23
+2 / p
+11
+4 % p
+3
+2 100 +
+3 4 5 f
+5
+4
+3
+102
+3
+5d*p
+25
+rf2pc
+5
+25
+4
+3
+102
+3
+2
+f
+]0;oneal_c@cobra:~/CSC245/Prog2Cobra> exit
+exit
+
+Script done on Fri 24 Feb 2017 03:25:16 PM EST

@@ -1,0 +1,3 @@
+This project will make a table to show the shortest path to each place at a starting location to each destination.
+
+The program will start by using command line of a filename and show the contents in the file that can be used. When the starting the vertex is entered, it will use Dijkstra's algorithm to determine each distance and previous destination in shortest length.
